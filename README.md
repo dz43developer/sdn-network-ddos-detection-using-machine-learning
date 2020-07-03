@@ -1,4 +1,4 @@
-# SDN Network DDoS detection using machine learning
+# SDN Network DDoS detection using MACHINE LEARNING
 
 # Setup
 
