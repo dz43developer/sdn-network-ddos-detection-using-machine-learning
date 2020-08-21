@@ -1,10 +1,7 @@
 from mininet.topo import Topo
 from mininet.net import Mininet
-# from mininet.node import CPULimitedHost
 from mininet.link import TCLink
-# from mininet.util import dumpNodeConnections
 from mininet.log import setLogLevel
-# from mininet.cli import CLI
 from mininet.node import OVSKernelSwitch, RemoteController
 from time import sleep
 
@@ -82,11 +79,12 @@ class MyTopo( Topo ):
         self.addLink( s3, s4 )
         self.addLink( s4, s5 )
         self.addLink( s5, s6 )
+
 def ip_generator():
 
     ip = ".".join(["10","0","0",str(randrange(1,19))])
     return ip
-
+        
 def startNetwork():
 
     #print "Starting Network"
@@ -98,7 +96,7 @@ def startNetwork():
     net = Mininet(topo=topo, link=TCLink, controller=c0)
 
     net.start()
-
+    
     h1 = net.get('h1')
     h2 = net.get('h2')
     h3 = net.get('h3')
@@ -118,61 +116,46 @@ def startNetwork():
     h17 = net.get('h17')
     h18 = net.get('h18')
     
-    hosts = [h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11, h12, h13, h14, h15, h16, h17, h18]
-    
+    hosts = [h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11, h12, h13, h14, h15, h16, h17, h18]    
+    print("--------------------------------------------------------------------------------")    
+    print("Generating traffic ...")    
     h1.cmd('cd /home/mininet/webserver')
     h1.cmd('python -m SimpleHTTPServer 80 &')
+    h1.cmd('iperf -s -p 5050 &')
+    h1.cmd('iperf -s -u -p 5051 &')
+    sleep(2)
+    for h in hosts:
+        h.cmd('cd /home/mininet/Downloads')
+    for i in range(600):
+        
+        print("--------------------------------------------------------------------------------")    
+        print("Iteration n {} ...".format(i+1))
+        print("--------------------------------------------------------------------------------") 
+        
+        for j in range(10):
+            src = choice(hosts)
+            dst = ip_generator()
+            
+            if j <9:
+                print("generating ICMP traffic between %s and h%s and TCP/UDP traffic between %s and h1" % (src,((dst.split('.'))[3]),src))
+                src.cmd("ping {} -c 100 &".format(dst))
+                src.cmd("iperf -p 5050 -c 10.0.0.1")
+                src.cmd("iperf -p 5051 -u -c 10.0.0.1")
+            else:
+                print("generating ICMP traffic between %s and h%s and TCP/UDP traffic between %s and h1" % (src,((dst.split('.'))[3]),src))
+                src.cmd("ping {} -c 100".format(dst))
+                src.cmd("iperf -p 5050 -c 10.0.0.1")
+                src.cmd("iperf -p 5051 -u -c 10.0.0.1")
+            
+            print("%s Downloading index.html from h1" % src)
+            src.cmd("wget http://10.0.0.1/index.html")
+            print("%s Downloading test.zip from h1" % src)
+            src.cmd("wget http://10.0.0.1/test.zip")
+        
+        h1.cmd("rm -f *.* /home/mininet/Downloads")
+        
+    print("--------------------------------------------------------------------------------")  
     
-    src = choice(hosts)
-    dst = ip_generator()
-    
-    
-    print("--------------------------------------------------------------------------------")
-    print("Performing ICMP (Ping) Flood")  
-    print("--------------------------------------------------------------------------------")
-    
-    src.cmd("timeout 20s hping3 -1 -V -d 120 -w 64 -p 80 --rand-source --flood {}".format(dst))
-    
-    sleep(200)
-    
-    
-    src = choice(hosts)
-    dst = ip_generator()
-    
-    print("--------------------------------------------------------------------------------")
-    print("Performing UDP Flood")  
-    print("--------------------------------------------------------------------------------")
-    
-    src.cmd("timeout 20s hping3 -2 -V -d 120 -w 64 --rand-source --flood {}".format(dst))
-    
-    sleep(200)
-    
-    src = choice(hosts)
-    dst = ip_generator()
-    
-    print("--------------------------------------------------------------------------------")
-    print("Performing TCP-SYN Flood")  
-    print("--------------------------------------------------------------------------------")
-
-    src.cmd('timeout 20s hping3 -S -V -d 120 -w 64 -p 80 --rand-source --flood 10.0.0.1')
-    
-    sleep(200)
-    
-    
-    src = choice(hosts)
-    dst = ip_generator()
-    
-    print("--------------------------------------------------------------------------------")
-    print("Performing LAND Attack")  
-    print("--------------------------------------------------------------------------------")
-    
-    src.cmd("timeout 20s hping3 -1 -V -d 120 -w 64 --flood -a {} {}".format(dst,dst))
-    
-    sleep(200)
-    
-    
-    print("--------------------------------------------------------------------------------")
-
     # CLI(net)
     net.stop()
 

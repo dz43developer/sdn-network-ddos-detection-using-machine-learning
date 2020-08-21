@@ -6,11 +6,16 @@ from ryu.lib import hub
 
 from datetime import datetime
 
+# class CollectTrainingStatsApp(simple_switch_13.SimpleSwitch13):
 class CollectTrainingStatsApp(switch.SimpleSwitch13):
     def __init__(self, *args, **kwargs):
         super(CollectTrainingStatsApp, self).__init__(*args, **kwargs)
         self.datapaths = {}
         self.monitor_thread = hub.spawn(self.monitor)
+
+        file0 = open("FlowStatsfile.csv","w")
+        file0.write('timestamp,datapath_id,flow_id,ip_src,tp_src,ip_dst,tp_dst,ip_proto,icmp_code,icmp_type,flow_duration_sec,flow_duration_nsec,idle_timeout,hard_timeout,flags,packet_count,byte_count,packet_count_per_second,packet_count_per_nsecond,byte_count_per_second,byte_count_per_nsecond,label\n')
+        file0.close()
 
     #Asynchronous message
     @set_ev_cls(ofp_event.EventOFPStateChange,[MAIN_DISPATCHER, DEAD_DISPATCHER])
@@ -36,7 +41,7 @@ class CollectTrainingStatsApp(switch.SimpleSwitch13):
 
     def request_stats(self, datapath):
         self.logger.debug('send stats request: %016x', datapath.id)
-
+        
         parser = datapath.ofproto_parser
 
         req = parser.OFPFlowStatsRequest(datapath)
@@ -52,12 +57,12 @@ class CollectTrainingStatsApp(switch.SimpleSwitch13):
         tp_src = 0
         tp_dst = 0
 
-        file0 = open("FlowStatsfile_icmp.csv","a+")
-
+        file0 = open("FlowStatsfile.csv","a+")
         body = ev.msg.body
         for stat in sorted([flow for flow in body if (flow.priority == 1) ], key=lambda flow:
             (flow.match['eth_type'],flow.match['ipv4_src'],flow.match['ipv4_dst'],flow.match['ip_proto'])):
         
+
             ip_src = stat.match['ipv4_src']
             ip_dst = stat.match['ipv4_dst']
             ip_proto = stat.match['ip_proto']
@@ -75,7 +80,7 @@ class CollectTrainingStatsApp(switch.SimpleSwitch13):
                 tp_dst = stat.match['udp_dst']
 
             flow_id = str(ip_src) + str(tp_src) + str(ip_dst) + str(tp_dst) + str(ip_proto)
-
+            
             try:
                 packet_count_per_second = stat.packet_count/stat.duration_sec
                 packet_count_per_nsecond = stat.packet_count/stat.duration_nsec
@@ -98,5 +103,5 @@ class CollectTrainingStatsApp(switch.SimpleSwitch13):
                         stat.idle_timeout, stat.hard_timeout,
                         stat.flags, stat.packet_count,stat.byte_count,
                         packet_count_per_second,packet_count_per_nsecond,
-                        byte_count_per_second,byte_count_per_nsecond,1))
+                        byte_count_per_second,byte_count_per_nsecond,0))
         file0.close()

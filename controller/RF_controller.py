@@ -61,7 +61,7 @@ class SimpleMonitor13(switch.SimpleSwitch13):
         timestamp = datetime.now()
         timestamp = timestamp.timestamp()
 
-        file0 = open("PredictFlowStatsfile_icmp.csv","w")
+        file0 = open("PredictFlowStatsfile.csv","w")
         file0.write('timestamp,datapath_id,flow_id,ip_src,tp_src,ip_dst,tp_dst,ip_proto,icmp_code,icmp_type,flow_duration_sec,flow_duration_nsec,idle_timeout,hard_timeout,flags,packet_count,byte_count,packet_count_per_second,packet_count_per_nsecond,byte_count_per_second,byte_count_per_nsecond\n')
         body = ev.msg.body
         icmp_code = -1
@@ -119,7 +119,7 @@ class SimpleMonitor13(switch.SimpleSwitch13):
 
         self.logger.info("Flow Training ...")
 
-        flow_dataset = pd.read_csv('FlowStatsfile_icmp.csv')
+        flow_dataset = pd.read_csv('FlowStatsfile.csv')
 
         flow_dataset.iloc[:, 2] = flow_dataset.iloc[:, 2].str.replace('.', '')
         flow_dataset.iloc[:, 3] = flow_dataset.iloc[:, 3].str.replace('.', '')
@@ -152,7 +152,7 @@ class SimpleMonitor13(switch.SimpleSwitch13):
 
     def flow_predict(self):
         try:
-            predict_flow_dataset = pd.read_csv('PredictFlowStatsfile_icmp.csv')
+            predict_flow_dataset = pd.read_csv('PredictFlowStatsfile.csv')
 
             predict_flow_dataset.iloc[:, 2] = predict_flow_dataset.iloc[:, 2].str.replace('.', '')
             predict_flow_dataset.iloc[:, 3] = predict_flow_dataset.iloc[:, 3].str.replace('.', '')
@@ -171,16 +171,21 @@ class SimpleMonitor13(switch.SimpleSwitch13):
                     legitimate_trafic = legitimate_trafic + 1
                 else:
                     ddos_trafic = ddos_trafic + 1
+                    victim = int(predict_flow_dataset.iloc[i, 5])%20
+                    
+                    
+                    
 
             self.logger.info("------------------------------------------------------------------------------")
             if (legitimate_trafic/len(y_flow_pred)*100) > 80:
                 self.logger.info("legitimate trafic ...")
             else:
                 self.logger.info("ddos trafic ...")
+                self.logger.info("victim is host: h{}".format(victim))
 
             self.logger.info("------------------------------------------------------------------------------")
             
-            file0 = open("PredictFlowStatsfile_icmp.csv","w")
+            file0 = open("PredictFlowStatsfile.csv","w")
             
             file0.write('timestamp,datapath_id,flow_id,ip_src,tp_src,ip_dst,tp_dst,ip_proto,icmp_code,icmp_type,flow_duration_sec,flow_duration_nsec,idle_timeout,hard_timeout,flags,packet_count,byte_count,packet_count_per_second,packet_count_per_nsecond,byte_count_per_second,byte_count_per_nsecond\n')
             file0.close()

@@ -13,10 +13,6 @@ class CollectTrainingStatsApp(switch.SimpleSwitch13):
         self.datapaths = {}
         self.monitor_thread = hub.spawn(self.monitor)
 
-        file0 = open("FlowStatsfile_icmp.csv","w")
-        file0.write('timestamp,datapath_id,flow_id,ip_src,tp_src,ip_dst,tp_dst,ip_proto,icmp_code,icmp_type,flow_duration_sec,flow_duration_nsec,idle_timeout,hard_timeout,flags,packet_count,byte_count,packet_count_per_second,packet_count_per_nsecond,byte_count_per_second,byte_count_per_nsecond,label\n')
-        file0.close()
-
     #Asynchronous message
     @set_ev_cls(ofp_event.EventOFPStateChange,[MAIN_DISPATCHER, DEAD_DISPATCHER])
     def state_change_handler(self, ev):
@@ -57,7 +53,7 @@ class CollectTrainingStatsApp(switch.SimpleSwitch13):
         tp_src = 0
         tp_dst = 0
 
-        file0 = open("FlowStatsfile_icmp.csv","a+")
+        file0 = open("FlowStatsfile.csv","a+")
         body = ev.msg.body
         for stat in sorted([flow for flow in body if (flow.priority == 1) ], key=lambda flow:
             (flow.match['eth_type'],flow.match['ipv4_src'],flow.match['ipv4_dst'],flow.match['ip_proto'])):
