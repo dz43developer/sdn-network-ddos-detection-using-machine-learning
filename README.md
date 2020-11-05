@@ -1,7 +1,5 @@
 # sdn-network-ddos-detection-using-machine-learning
 
-- Find code here: https://github.com/dz43developer/sdn-network-ddos-detection-using-machine-learning
-
 - Find dataset here: https://drive.google.com/file/d/1N2QLDPb90XOdxcuQ_Fb7ZSVOG4J3w_zY/view?usp=sharing
 
 - Find ryu controller vm here: https://drive.google.com/file/d/1_5PQWBsQcVnxtzwhUMzP-w2mR9MZrG6S/view?usp=sharing
